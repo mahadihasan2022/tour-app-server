@@ -20,7 +20,8 @@ const client = new MongoClient(url, {
 async function run() {
   try {
     const database = client.db("tourApp");
-    const productsCollection = database.collection("currentPackage");
+    const currentPackageCollection = database.collection("currentPackage");
+    const bestResortCollection = database.collection("bestResort");
 
 
 
@@ -28,9 +29,15 @@ async function run() {
   //-------------------------------
           // Home Section
   //-------------------------------
-     app.get("/products", async (req, res) => {
+     app.get("/currentPackage", async (req, res) => {
         const query = {};
-        const cursor = productsCollection.find(query);
+        const cursor = currentPackageCollection.find(query);
+        const products = await cursor.toArray();
+        res.json(products);
+      });
+     app.get("/bestResort", async (req, res) => {
+        const query = {};
+        const cursor = bestResortCollection.find(query);
         const products = await cursor.toArray();
         res.json(products);
       });
