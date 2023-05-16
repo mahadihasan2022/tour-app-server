@@ -35,6 +35,13 @@ async function run() {
         const products = await cursor.toArray();
         res.json(products);
       });
+      app.get("/currentPackage/:id", async (req, res) => {
+        const id = req.params.id;
+        const query = { _id: ObjectId(id) };
+        const buy = await currentPackageCollection.findOne(query);
+        res.send(buy);
+      });
+
      app.get("/bestResort", async (req, res) => {
         const query = {};
         const cursor = bestResortCollection.find(query);
