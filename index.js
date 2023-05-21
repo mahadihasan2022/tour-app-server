@@ -49,6 +49,13 @@ async function run() {
         res.json(products);
       });
 
+       app.get("/bestResort/:id", async (req, res) => {
+        const id = req.params.id;
+        const query = { _id: ObjectId(id) };
+        const buy = await bestResortCollection.findOne(query);
+        res.send(buy);
+      });
+
 
  
   } finally {
