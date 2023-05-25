@@ -22,6 +22,7 @@ async function run() {
     const database = client.db("tourApp");
     const currentPackageCollection = database.collection("currentPackage");
     const bestResortCollection = database.collection("bestResort");
+    const usersCollection = database.collection("users");
 
 
 
@@ -54,6 +55,59 @@ async function run() {
         const query = { _id: ObjectId(id) };
         const buy = await bestResortCollection.findOne(query);
         res.send(buy);
+      });
+
+
+
+      app.get("/user", async (req, res) => {
+        const getUserEmail = req?.query?.email;
+        if (getUserEmail) {
+          const query = { email: getUserEmail };
+          const user = await usersCollection.findOne(query);
+          res.json(user);
+        } else {
+          const cursor = usersCollection.find({});
+          const users = await cursor.toArray();
+          res.json(users);
+        }
+      });
+  
+      app.put("/user", async (req, res) => {
+        const addUser = req.query.addUser;
+        const addFriends = req.query.addFriends;
+        const options = { upsert: true };
+        if (addUser) {
+          const newUsers = req.body;
+          const filter = { email: addUser };
+          const updateDoc = {
+            $set: {
+              name: newUsers?.name,
+              email: newUsers?.email,
+              img: newUsers?.img,
+            },
+          };
+          const result = await usersCollection.updateOne(
+            filter,
+            updateDoc,
+            options
+          );
+          // console.log(result)
+          res.send(result);
+        }
+        if (addFriends) {
+          const newFriends = req.body;
+          // console.log(newFriends)
+          const filter = { email: addFriends };
+          const updateDoc = {
+            $set: { friends: newFriends },
+          };
+          const result = await usersCollection.updateOne(
+            filter,
+            updateDoc,
+            options
+          );
+          res.send(result);
+        }
       });
 
 
