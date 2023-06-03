@@ -56,6 +56,18 @@ async function run() {
         const buy = await bestResortCollection.findOne(query);
         res.send(buy);
       });
+      //  app.put("/user/:id", async (req, res) => {
+      //   const id = req.params.id;
+      //   const query = { _id: ObjectId(id) };
+      //   const editUser = await usersCollection.findOne(query);
+      //   res.send(editUser);
+      // });
+       app.get("/user/:email", async (req, res) => {
+        const email = req.params.email;
+        const query = {  email};
+        const findUser = await usersCollection.findOne(query);
+        res.json(findUser);
+      });
 
 
 
@@ -74,6 +86,7 @@ async function run() {
   
       app.put("/user", async (req, res) => {
         const addUser = req.query.addUser;
+        console.log(req.body, addUser)
         const addFriends = req.query.addFriends;
         const options = { upsert: true };
         if (addUser) {
@@ -81,9 +94,11 @@ async function run() {
           const filter = { email: addUser };
           const updateDoc = {
             $set: {
-              name: newUsers?.name,
+              displayName: newUsers?.displayName,
               email: newUsers?.email,
               img: newUsers?.img,
+              phone: newUsers?.phone,
+              address: newUsers?.address,
             },
           };
           const result = await usersCollection.updateOne(
@@ -109,6 +124,7 @@ async function run() {
           res.send(result);
         }
       });
+  
 
 
  
