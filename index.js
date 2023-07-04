@@ -1,5 +1,5 @@
 const express = require("express");
-
+const bodyParser = require('body-parser')
 const app = express();
 const cors = require("cors");
 const { MongoClient, ServerApiVersion } = require("mongodb");
@@ -11,6 +11,8 @@ require("dotenv").config();
 
 app.use(cors());
 app.use(express.json());
+app.use(bodyParser.urlencoded({ extended: false }))
+app.use(bodyParser.json());
 
 const url = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.h8k01.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(url, {
@@ -29,11 +31,13 @@ async function run() {
     const currentPackageCollection = database.collection("currentPackage");
     const bestResortCollection = database.collection("bestResort");
     const orderCollection = database.collection("order");
+    const resortOrderCollection = database.collection("resortOrder");
     const usersCollection = database.collection("users");
 
     //-------------------------------
     // Home Section
     //-------------------------------
+    
     app.get("/currentPackage", async (req, res) => {
       const query = {};
       const cursor = currentPackageCollection.find(query);
@@ -46,14 +50,14 @@ async function run() {
       const buy = await currentPackageCollection.findOne(query);
       res.send(buy);
     });    
-
+    
+    
     app.get("/bestResort", async (req, res) => {
       const query = {};
       const cursor = bestResortCollection.find(query);
       const products = await cursor.toArray();
       res.json(products);
     });
-
     app.get("/bestResort/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: ObjectId(id) };
@@ -61,34 +65,51 @@ async function run() {
       res.send(buy);
     });
 
+
     app.put("/orders", async (req, res) => {
       const order = req.body;
       const result = await orderCollection.insertOne(order);
       res.send(result);
     });
-
-    app.get('/orders', async (req, res) => {
+    app.get("/orders", async (req, res) => {
       const email = req.query.email;
-      const query = {email: email};
+      const query = { email: email };
       const bookings = orderCollection.find(query);
       const products = await bookings.toArray();
       res.json(products);
     });
-
-    // app.get("/booking", async (req, res) => {
-    //   const query = {};
-    //   const cursor = orderCollection.find(query);
-    //   const products = await cursor.toArray();
-    //   res.json(products);
-    // });
-     
+    app.put("/resortOrders", async (req, res) => {
+      const order = req.body;
+      const result = await resortOrderCollection.insertOne(order);
+      res.send(result);
+    });
+    app.get("/resortOrders", async (req, res) => {
+      const email = req.query.email;
+      const query = { email: email };
+      const bookings = resortOrderCollection.find(query);
+      const products = await bookings.toArray();
+      res.json(products);
+    });
+    app.delete("/resortOrders", async (req, res) => {
+      const email = req.query.email;
+      const query = { email: email };
+      console.log(query);
+      const result = await resortOrderCollection.deleteOne(query);
+      res.send(result);
+    });
+    app.delete("/orders", async (req, res) => {
+      const email = req.query.email;
+      const query = { email: email };
+      console.log(query);
+      const result = await orderCollection.deleteOne(query);
+      res.send(result);
+    });
     app.get("/user/:email", async (req, res) => {
       const email = req.params.email;
       const query = { email };
       const findUser = await usersCollection.findOne(query);
       res.json(findUser);
     });
-
     app.get("/user", async (req, res) => {
       const getUserEmail = req?.query?.email;
       if (getUserEmail) {
@@ -101,7 +122,6 @@ async function run() {
         res.json(users);
       }
     });
-
     app.put("/user", async (req, res) => {
       const addUser = req.query.addUser;
       console.log(req.body, addUser);
@@ -127,7 +147,7 @@ async function run() {
         // console.log(result)
         res.send(result);
       }
-      
+
       if (addFriends) {
         const newFriends = req.body;
         // console.log(newFriends)
@@ -143,6 +163,55 @@ async function run() {
         res.send(result);
       }
     });
+
+    app.get('/ssl-payment', (req, res) => {
+      const data = {
+          total_amount: 4100,
+          currency: 'BDT',
+          tran_id: 'REF123', // use unique tran_id for each api call
+          success_url: 'http://localhost:5000/success',
+          fail_url: 'http://localhost:3030/fail',
+          cancel_url: 'http://localhost:3030/cancel',
+          ipn_url: 'http://localhost:3030/ipn',
+          shipping_method: 'Courier',
+          product_name: 'Computer.',
+          product_category: 'Electronic',
+          product_profile: 'general',
+          cus_name: 'Customer Name',
+          cus_email: 'customer@example.com',
+          cus_add1: 'Dhaka',
+          cus_add2: 'Dhaka',
+          cus_city: 'Dhaka',
+          cus_state: 'Dhaka',
+          cus_postcode: '1000',
+          cus_country: 'Bangladesh',
+          cus_phone: '01711111111',
+          cus_fax: '01711111111',
+          ship_name: 'Customer Name',
+          ship_add1: 'Dhaka',
+          ship_add2: 'Dhaka',
+          ship_city: 'Dhaka',
+          ship_state: 'Dhaka',
+          ship_postcode: 1000,
+          ship_country: 'Bangladesh',
+      };
+      const sslcz = new SSLCommerzPayment(store_id, store_passwd, is_live)
+      sslcz.init(data).then(apiResponse => {
+          // Redirect the user to payment gateway
+          let GatewayPageURL = apiResponse.GatewayPageURL
+          res.send({GatewayPageURL})
+          console.log('Redirecting to: ', GatewayPageURL)
+      });
+      app.get('/success/:tran_id', async (req, res) => {
+        console.log();
+      })
+  })
+    
+
+
+
+
+
   } finally {
     // await client.close();
   }
@@ -157,20 +226,4 @@ app.listen(port, () => {
   console.log(`http://localhost:${port}`);
 });
 
-// app.put("/orders", async(req, res)=>{
-//         const id = req.params.id;
-//         const data = req.body;
-//         console.log(data,id);
-//         const filter = {_id:ObjectId(id)};
-//         const options = {upset:true};
-//         const updateDoc = {
-//             $set:{
-//               date:data?.date,
-//               groupSize:data?.groupSize,
-//               phone:data?.phone,
 
-//             },
-//         };
-//         const result = await orderCollection.insertOne(filter,updateDoc,options);
-//         res.send(result);
-//     })
