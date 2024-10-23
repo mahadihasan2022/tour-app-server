@@ -4,10 +4,15 @@ const app = express();
 const cors = require("cors");
 const { MongoClient, ServerApiVersion } = require("mongodb");
 const ObjectId = require("mongodb").ObjectId;
-const SSLCommerzPayment = require("sslcommerz-lts");
+
+const SSLCommerzPayment = require('sslcommerz-lts')
+const store_id = process.env.STORE_ID;
+const store_passwd = process.env.STORE_SECRET;
+const is_live = false; //true for live, false for sandbox
 
 const port = process.env.PORT || 5000;
 require("dotenv").config();
+
 
 app.use(cors());
 app.use(express.json());
@@ -21,9 +26,6 @@ const client = new MongoClient(url, {
   serverApi: ServerApiVersion.v1,
 });
 
-const store_id = process.env.STORE_ID;
-const store_passwd = process.env.STORE_SECRET;
-const is_live = false; //true for live, false for sandbox
 
 async function run() {
   try {
